@@ -132,7 +132,6 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
         {groups.map((group) => {
           const hasSubs = !!group.subItems
           const isExpanded = expanded[group.label]
-          const showSubs = !collapsed && hasSubs && isExpanded
           const groupActive = isGroupActive(group)
 
           return (
@@ -166,23 +165,22 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
                       {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </span>
                   </NavLink>
-                  {showSubs && (
-                    <div className="sidebar-sub-items">
-                      {group.subItems!.map((sub) => (
-                        <NavLink
-                          key={sub.to}
-                          to={sub.to}
-                          end={sub.end}
-                          className={({ isActive }) => `nav-item sub-item${isActive ? ' active' : ''}`}
-                        >
-                          <span className="nav-text">{sub.label}</span>
-                          {sub.badge !== undefined && (
-                            <span className={`sub-badge ${sub.badgeType}`}>{sub.badge}</span>
-                          )}
-                        </NavLink>
-                      ))}
-                    </div>
-                  )}
+                  <div className={`sidebar-sub-items${isExpanded && !collapsed ? ' expanded' : ''}`}>
+                    {group.subItems!.map((sub) => (
+                      <NavLink
+                        key={sub.to}
+                        to={sub.to}
+                        end={sub.end}
+                        className={({ isActive }) => `nav-item sub-item${isActive ? ' active' : ''}`}
+                        tabIndex={isExpanded && !collapsed ? 0 : -1}
+                      >
+                        <span className="nav-text">{sub.label}</span>
+                        {sub.badge !== undefined && (
+                          <span className={`sub-badge ${sub.badgeType}`}>{sub.badge}</span>
+                        )}
+                      </NavLink>
+                    ))}
+                  </div>
                 </>
               ) : (
                 <NavLink
