@@ -281,7 +281,11 @@ const incidentsByEnv: Record<string, Incident[]> = {
 }
 
 export function getIncidents(envId: string): Incident[] {
-  return incidentsByEnv[envId] ?? []
+  const list = incidentsByEnv[envId] ?? []
+  if (envId === 'dev' || list.length === 0) {
+    return incidentsByEnv['prod-us']
+  }
+  return list
 }
 
 export function findIncident(id: string): Incident | undefined {

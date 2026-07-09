@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   CalendarClock, ChevronDown, Clock, Download, FileText,
   Library, Sparkles, ArrowDownToLine, FileArchive,
@@ -39,7 +40,7 @@ const HISTORY: {
 type View = 'report' | 'history'
 
 const VIEWS: { key: View; label: string }[] = [
-  { key: 'report',  label: 'Report' },
+  { key: 'report',  label: 'Insights' },
   { key: 'history', label: 'History' },
 ]
 
@@ -259,6 +260,28 @@ function ReportView() {
 /* ── Page shell ───────────────────────────────────────────────────────────── */
 export function MetricsReportPage() {
   const [view, setView] = useState<View>('report')
+  const [searchParams] = useSearchParams()
+  const forcedState = searchParams.get('state')
+
+  if (forcedState === 'error') {
+    return (
+      <div className="error-panel" role="alert">
+        <div className="error-title">Couldn’t load report data</div>
+        <div className="error-sub">
+          The reporting pipeline is temporarily offline or data is still aggregating.
+        </div>
+      </div>
+    )
+  }
+
+  if (forcedState === 'empty') {
+    return (
+      <div className="placeholder-panel">
+        No report metrics available.
+        <span className="mono">run your first workflow or collect telemetry to build reports</span>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -270,6 +293,7 @@ export function MetricsReportPage() {
             role="tab"
             aria-selected={view === v.key}
             className={`subnav-item${view === v.key ? ' active' : ''}`}
+            style={v.key === 'history' ? { marginLeft: 'auto' } : undefined}
             onClick={() => setView(v.key)}
           >
             {v.key === 'history' && <Clock size={12} strokeWidth={2.2} style={{ marginRight: 4, verticalAlign: -1 }} />}

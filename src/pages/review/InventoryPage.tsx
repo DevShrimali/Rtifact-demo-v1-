@@ -49,6 +49,27 @@ export function InventoryPage() {
   const [params, setParams] = useSearchParams()
   const cat = (CATEGORIES.find((c) => c.key === params.get('cat'))?.key ?? 'security') as Cat
   const loading = useEnvLoad()
+  const forcedState = params.get('state')
+
+  if (forcedState === 'error') {
+    return (
+      <div className="error-panel" role="alert">
+        <div className="error-title">Couldn’t load inventory metadata</div>
+        <div className="error-sub">
+          The resource mapping system encountered a connection timeout.
+        </div>
+      </div>
+    )
+  }
+
+  if (forcedState === 'empty') {
+    return (
+      <div className="placeholder-panel">
+        No inventory items.
+        <span className="mono">provision cloud resources to index them in the catalog</span>
+      </div>
+    )
+  }
 
   const setCat = (k: Cat) => setParams(k === 'security' ? {} : { cat: k })
 

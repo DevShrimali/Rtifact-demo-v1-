@@ -24,7 +24,27 @@ export function SummaryPage() {
     ? intervalParam
     : 'daily'
   const loading = useEnvLoad()
+  const forcedState = searchParams.get('state')
 
+  if (forcedState === 'error') {
+    return (
+      <div className="error-panel" role="alert">
+        <div className="error-title">Couldn’t load overview data</div>
+        <div className="error-sub">
+          The overview aggregation service timed out. Check connection health.
+        </div>
+      </div>
+    )
+  }
+
+  if (forcedState === 'empty') {
+    return (
+      <div className="placeholder-panel">
+        No platform summary data available.
+        <span className="mono">active telemetry and workflows will populate this summary</span>
+      </div>
+    )
+  }
 
   if (loading) {
     return (

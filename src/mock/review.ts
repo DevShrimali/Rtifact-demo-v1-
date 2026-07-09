@@ -24,7 +24,7 @@ export const contributions: Contribution[] = [
 ]
 
 export function weeklyRollup(envId: string) {
-  const rows = contributions.filter((c) => c.envId === envId)
+  const rows = contributions.filter((c) => c.envId === (envId === 'dev' ? 'prod-us' : envId))
   return {
     costUsd: rows.reduce((s, c) => s + c.costUsd, 0),
     engHours: Math.round(rows.reduce((s, c) => s + c.engHours, 0) * 10) / 10,
@@ -90,7 +90,11 @@ const securityByEnv: Record<string, SecurityData> = {
 }
 
 export function getSecurity(envId: string): SecurityData {
-  return securityByEnv[envId] ?? securityByEnv['dev']
+  const data = securityByEnv[envId] ?? securityByEnv['dev']
+  if (envId === 'dev' || data.findingTypes === 0) {
+    return securityByEnv['prod-us']
+  }
+  return data
 }
 
 /* ---------- Screen 11: Cost optimization ---------- */
@@ -120,7 +124,11 @@ const costByEnv: Record<string, CostItem[]> = {
 }
 
 export function getCostItems(envId: string): CostItem[] {
-  return costByEnv[envId] ?? []
+  const items = costByEnv[envId] ?? []
+  if (envId === 'dev' || items.length === 0) {
+    return costByEnv['prod-us']
+  }
+  return items
 }
 
 /* ---------- Screen 12: Reliability risk ---------- */
@@ -159,7 +167,11 @@ const reliabilityByEnv: Record<string, ReliabilityData> = {
 }
 
 export function getReliability(envId: string): ReliabilityData {
-  return reliabilityByEnv[envId] ?? reliabilityByEnv['dev']
+  const data = reliabilityByEnv[envId] ?? reliabilityByEnv['dev']
+  if (envId === 'dev' || data.signals.length === 0) {
+    return reliabilityByEnv['prod-us']
+  }
+  return data
 }
 
 /* ---------- Screen 09: Executive summary ---------- */

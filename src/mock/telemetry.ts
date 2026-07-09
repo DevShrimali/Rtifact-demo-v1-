@@ -25,14 +25,14 @@ export interface GraphEdge {
 }
 
 export const graphNodes: GraphNode[] = [
-  { id: 'edge-ingress', label: 'edge-ingress', x: 90,  y: 170, rps: 4200, errorPct: 0.9, highP99: false, p99Ms: 210,  desc: 'Public-facing ingress; draining pods in us-east-1c' },
-  { id: 'router',       label: 'router-tier',  x: 235, y: 170, rps: 4100, errorPct: 0.2, highP99: false, p99Ms: 48,   desc: 'Internal service mesh router — healthy' },
-  { id: 'checkout',     label: 'checkout-svc', x: 400, y: 90,  rps: 820,  errorPct: 4.2, highP99: true,  p99Ms: 2400, desc: 'v2.14.3 deploy introduced retry storm' },
-  { id: 'search',       label: 'search-api',   x: 400, y: 250, rps: 1900, errorPct: 0.1, highP99: false, p99Ms: 95,   desc: 'Cache hit 96% — stable' },
-  { id: 'payments',     label: 'payments-api', x: 565, y: 90,  rps: 640,  errorPct: 1.1, highP99: true,  p99Ms: 2400, desc: 'p99 exceeding SLO 800 ms; upstream retries' },
-  { id: 'cart',         label: 'cart-svc',     x: 565, y: 250, rps: 1100, errorPct: 0.1, highP99: false, p99Ms: 74,   desc: 'Healthy; cache hit 94%' },
-  { id: 'orders-db',    label: 'orders-db',    x: 720, y: 90,  rps: 950,  errorPct: 2.3, highP99: true,  p99Ms: 580,  desc: 'Connection pool at 87% — 3 waiters queued' },
-  { id: 'cache',        label: 'redis-cache',  x: 720, y: 250, rps: 3800, errorPct: 0.0, highP99: false, p99Ms: 2,    desc: 'Fully healthy — 0 errors' },
+  { id: 'edge-ingress', label: 'edge-ingress', x: 90,  y: 140, rps: 4200, errorPct: 0.9, highP99: false, p99Ms: 210,  desc: 'Public-facing ingress; draining pods in us-east-1c' },
+  { id: 'router',       label: 'router-tier',  x: 235, y: 140, rps: 4100, errorPct: 0.2, highP99: false, p99Ms: 48,   desc: 'Internal service mesh router — healthy' },
+  { id: 'checkout',     label: 'checkout-svc', x: 400, y: 70,  rps: 820,  errorPct: 4.2, highP99: true,  p99Ms: 2400, desc: 'v2.14.3 deploy introduced retry storm' },
+  { id: 'search',       label: 'search-api',   x: 400, y: 210, rps: 1900, errorPct: 0.1, highP99: false, p99Ms: 95,   desc: 'Cache hit 96% — stable' },
+  { id: 'payments',     label: 'payments-api', x: 565, y: 70,  rps: 640,  errorPct: 1.1, highP99: true,  p99Ms: 2400, desc: 'p99 exceeding SLO 800 ms; upstream retries' },
+  { id: 'cart',         label: 'cart-svc',     x: 565, y: 210, rps: 1100, errorPct: 0.1, highP99: false, p99Ms: 74,   desc: 'Healthy; cache hit 94%' },
+  { id: 'orders-db',    label: 'orders-db',    x: 720, y: 70,  rps: 950,  errorPct: 2.3, highP99: true,  p99Ms: 580,  desc: 'Connection pool at 87% — 3 waiters queued' },
+  { id: 'cache',        label: 'redis-cache',  x: 720, y: 210, rps: 3800, errorPct: 0.0, highP99: false, p99Ms: 2,    desc: 'Fully healthy — 0 errors' },
 ]
 
 export const graphEdges: GraphEdge[] = [
@@ -399,8 +399,8 @@ const checks: SyntheticCheck[] = [
   },
 ]
 
-export function getSyntheticChecks(envId: string): SyntheticCheck[] {
-  return envId === 'dev' ? [] : checks
+export function getSyntheticChecks(_envId: string): SyntheticCheck[] {
+  return checks
 }
 
 /* ---------- Screen 25: Logs explorer ---------- */

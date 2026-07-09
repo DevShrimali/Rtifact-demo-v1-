@@ -82,19 +82,10 @@ export function CommandPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* Priority Filter */}
           <select
+            className="text-input select"
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            style={{
-              padding: '6px 10px',
-              borderRadius: '6px',
-              border: '1px solid var(--border)',
-              background: 'var(--surface)',
-              color: 'var(--fg)',
-              fontSize: '12.5px',
-              cursor: 'pointer',
-              outline: 'none',
-              fontWeight: 500,
-            }}
+            style={{ fontSize: '12.5px', fontWeight: 500, padding: '6px 28px 6px 10px' }}
           >
             <option value="all">All Priorities</option>
             <option value="critical">Critical Only</option>

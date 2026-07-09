@@ -1,13 +1,12 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { PlugZap, Sparkles } from 'lucide-react'
+import { PlugZap } from 'lucide-react'
 import type { GraphNode } from '../../mock/telemetry'
 import { graphEdges, graphNodes, intelligenceStats } from '../../mock/telemetry'
-import { useAskAI } from '../../components/AskAI'
 import { useEnv } from '../../state/env'
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
-function nodeRadius(rps: number) { return 12 + Math.sqrt(rps) / 5 }
+function nodeRadius(rps: number) { return 8 + Math.sqrt(rps) / 9 }
 
 function ringColor(errorPct: number) {
   if (errorPct >= 2) return 'var(--error)'
@@ -66,13 +65,9 @@ function NodeTooltip({ node, cursor }: TooltipProps) {
   )
 }
 
-/* ── main page ────────────────────────────────────────────────────────────── */
-const VB_W = 810
-const VB_H = 340
 
 export function IntelligencePage() {
   const { env } = useEnv()
-  const { setOpen } = useAskAI()
   const [searchParams] = useSearchParams()
   const [loading, setLoading] = useState(true)
 
@@ -82,10 +77,43 @@ export function IntelligencePage() {
     return () => clearTimeout(t)
   }, [env.id])
 
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [dimensions, setDimensions] = useState({ width: 810, height: 280 })
+
+  useEffect(() => {
+    if (!containerRef.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    setDimensions({ width: rect.width || 810, height: 280 })
+
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        if (entry.contentRect.width) {
+          setDimensions({ width: entry.contentRect.width, height: 280 })
+        }
+      }
+    })
+    observer.observe(containerRef.current)
+    return () => observer.disconnect()
+  }, [])
+
   /* ── node positions (draggable) ── */
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>(() =>
     Object.fromEntries(graphNodes.map((n) => [n.id, { x: n.x, y: n.y }]))
   )
+
+  useEffect(() => {
+    setPositions(
+      Object.fromEntries(
+        graphNodes.map((n) => [
+          n.id,
+          {
+            x: (n.x / 810) * dimensions.width,
+            y: (n.y / 280) * dimensions.height,
+          },
+        ])
+      )
+    )
+  }, [dimensions.width, dimensions.height])
 
   /* ── hover + cursor-following tooltip ── */
   const [hovered, setHovered] = useState<string | null>(null)
@@ -98,39 +126,39 @@ export function IntelligencePage() {
   const onPointerDown = useCallback((e: React.PointerEvent<SVGGElement>, id: string) => {
     e.currentTarget.setPointerCapture(e.pointerId)
     const rect = svgRef.current!.getBoundingClientRect()
-    const scaleX = VB_W / rect.width
-    const scaleY = VB_H / rect.height
+    const scaleX = dimensions.width / rect.width
+    const scaleY = dimensions.height / rect.height
     const svgX = (e.clientX - rect.left) * scaleX
     const svgY = (e.clientY - rect.top) * scaleY
     dragging.current = { id, ox: svgX - positions[id].x, oy: svgY - positions[id].y }
     setHovered(null)
-  }, [positions])
+  }, [positions, dimensions])
 
   const onPointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     /* update cursor for tooltip */
     setCursor({ x: e.clientX, y: e.clientY })
     if (!dragging.current) return
     const rect = svgRef.current!.getBoundingClientRect()
-    const scaleX = VB_W / rect.width
-    const scaleY = VB_H / rect.height
+    const scaleX = dimensions.width / rect.width
+    const scaleY = dimensions.height / rect.height
     const svgX = (e.clientX - rect.left) * scaleX
     const svgY = (e.clientY - rect.top) * scaleY
     const { id, ox, oy } = dragging.current
     setPositions((prev) => ({
       ...prev,
       [id]: {
-        x: Math.max(20, Math.min(VB_W - 20, svgX - ox)),
-        y: Math.max(20, Math.min(VB_H - 20, svgY - oy)),
+        x: Math.max(20, Math.min(dimensions.width - 20, svgX - ox)),
+        y: Math.max(20, Math.min(dimensions.height - 20, svgY - oy)),
       },
     }))
-  }, [])
+  }, [dimensions])
 
   const onPointerUp = useCallback(() => {
     dragging.current = null
   }, [])
 
   /* ── empty / loading states ── */
-  if (env.id === 'dev' || searchParams.get('state') === 'empty') {
+  if (searchParams.get('state') === 'empty') {
     return (
       <div className="placeholder-panel" style={{ padding: 44 }}>
         <PlugZap size={24} strokeWidth={1.8} style={{ color: 'var(--faint)', marginBottom: 8 }} />
@@ -161,7 +189,7 @@ export function IntelligencePage() {
 
   return (
     <>
-      <section className="panel" style={{ padding: 0, overflow: 'visible', position: 'relative' }}>
+      <section ref={containerRef} className="panel" style={{ padding: 0, overflow: 'visible', position: 'relative' }}>
         <div className="graph-toolbar">
           <span className="panel-title" style={{ margin: 0 }}>
             Service dependency graph
@@ -176,15 +204,12 @@ export function IntelligencePage() {
             <span className="legend-item">dashed = high p99</span>
             <span className="legend-item" style={{ color: 'var(--faint)', fontStyle: 'italic' }}>drag to rearrange</span>
           </div>
-          <button className="btn btn-primary" onClick={() => setOpen(true)}>
-            <Sparkles size={14} strokeWidth={2.2} />
-            Ask AI about this graph
-          </button>
+
         </div>
 
         <svg
           ref={svgRef}
-          viewBox={`0 0 ${VB_W} ${VB_H}`}
+          viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
           className="dep-graph"
           role="img"
           aria-label="Service dependency graph"
@@ -195,14 +220,11 @@ export function IntelligencePage() {
         >
           {/* ── grid background ── */}
           <defs>
-            <pattern id="dep-grid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-              {/* Infinite canvas style: very faint grid lines */}
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--fg)" strokeWidth="0.8" opacity="0.04" />
-              {/* Plus/crosshair markers at intersections */}
-              <path d="M 0 4 L 0 0 L 4 0 M 0 -4 L 0 0 L -4 0" fill="none" stroke="var(--fg)" strokeWidth="1" opacity="0.25" />
+            <pattern id="dep-grid" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+              <circle cx="1.5" cy="1.5" r="1" fill="var(--fg)" opacity="0.08" />
             </pattern>
           </defs>
-          <rect width={VB_W} height={VB_H} fill="url(#dep-grid)" />
+          <rect width={dimensions.width} height={dimensions.height} fill="url(#dep-grid)" />
 
           {/* edges — re-render live as nodes are dragged */}
           {graphEdges.map((e) => {
@@ -265,11 +287,11 @@ export function IntelligencePage() {
                   style={{ transition: 'stroke-width 0.12s, fill 0.12s' }}
                 />
                 {/* RPS label inside */}
-                <text x={pos.x} y={pos.y + 3.5} textAnchor="middle" className="dep-rps">
+                <text x={pos.x} y={pos.y + 3} textAnchor="middle" className="dep-rps">
                   {fmtRps(n.rps)}
                 </text>
                 {/* service name below */}
-                <text x={pos.x} y={pos.y + r + 16} textAnchor="middle" className="dep-label">
+                <text x={pos.x} y={pos.y + r + 12} textAnchor="middle" className="dep-label">
                   {n.label}
                 </text>
               </g>

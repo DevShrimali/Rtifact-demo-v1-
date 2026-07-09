@@ -459,7 +459,7 @@ function ConnectWizard({ onClose }: { onClose: () => void }) {
                 <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--fg)' }}>Rescan schedule</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--muted)' }}>Keep resource topology up to date</div>
               </div>
-              <select style={{ background: 'var(--chip)', color: 'var(--fg)', border: '1px solid var(--border)', borderRadius: '4px', padding: '4px 8px', fontSize: '12px' }}>
+              <select className="text-input select" style={{ width: 'auto', minWidth: 90, fontSize: '12px', padding: '4px 28px 4px 8px' }}>
                 <option>Daily</option>
                 <option>Hourly</option>
                 <option>Manual</option>

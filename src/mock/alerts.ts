@@ -170,5 +170,12 @@ const boards: Record<string, AlertsBoard> = {
 }
 
 export function getBoard(envId: string): AlertsBoard {
-  return boards[envId] ?? boards['dev']
+  const board = boards[envId] ?? boards['dev']
+  if (envId === 'dev' || !board.alerts || board.alerts.length === 0) {
+    return {
+      ...board,
+      alerts: boards['prod-us'].alerts,
+    }
+  }
+  return board
 }
