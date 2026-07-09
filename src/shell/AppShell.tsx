@@ -20,9 +20,9 @@ export function AppShell() {
   return (
     <AskAIProvider>
       <div className={`shell${collapsed ? ' sb-collapsed' : ''}`}>
-        <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
+        <Sidebar collapsed={collapsed} />
         <div className="main">
-          <Topbar />
+          <Topbar collapsed={collapsed} onToggle={toggleSidebar} />
           {/* keyed by pathname → rt-fade plays on every route change (no silent jumps) */}
           <main className="canvas" key={location.pathname}>
             <Outlet />

@@ -3,8 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom'
 import {
   LifeBuoy,
   LineChart,
-  PanelLeftClose,
-  PanelLeftOpen,
   Radar,
   Settings,
   Workflow,
@@ -31,7 +29,7 @@ interface GroupItem {
   subItems?: SubItem[]
 }
 
-export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+export function Sidebar({ collapsed }: { collapsed: boolean }) {
   const { env } = useEnv()
   const { persona } = usePersona()
   const location = useLocation()
@@ -54,6 +52,8 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
       return next
     })
   }
+
+  const [modulesExpanded, setModulesExpanded] = useState(true)
 
   // Groups and items structure
   const groups: GroupItem[] = [
@@ -87,11 +87,6 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
       Icon: LifeBuoy,
       to: '/support',
     },
-    {
-      label: 'Settings',
-      Icon: Settings,
-      to: '/settings',
-    },
   ]
 
   // Helper to check if a group is currently active
@@ -111,25 +106,20 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
     <aside className="sidebar">
       <div className="wordmark">
         <RtifactLogo showText={!collapsed} height={20} />
-
-        <button
-          className="sb-toggle"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-expanded={!collapsed}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          onClick={onToggle}
-        >
-          {collapsed ? (
-            <PanelLeftOpen size={15} strokeWidth={2} />
-          ) : (
-            <PanelLeftClose size={15} strokeWidth={2} />
-          )}
-        </button>
       </div>
 
       <nav className="nav-section" aria-label="Modules">
-        <div className="nav-label nav-text">Modules</div>
-        {groups.map((group) => {
+        <div
+          className="nav-label nav-text modules-header-toggle"
+          onClick={() => setModulesExpanded(!modulesExpanded)}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none' }}
+        >
+          <span>Modules</span>
+          <span className="modules-caret" style={{ fontSize: '8px', opacity: 0.6 }}>
+            {modulesExpanded ? '▼' : '▶'}
+          </span>
+        </div>
+        {modulesExpanded && groups.map((group) => {
           const hasSubs = !!group.subItems
           const isExpanded = expanded[group.label]
           const groupActive = isGroupActive(group)
@@ -140,7 +130,6 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
                 <>
                   <NavLink
                     to={group.to!}
-                    title={collapsed ? group.label : undefined}
                     onClick={() => {
                       if (!isExpanded) {
                         setExpanded((prev) => ({ ...prev, [group.label]: true }))
@@ -148,7 +137,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
                         toggleGroup(group.label)
                       }
                     }}
-                    className={`nav-item nav-group-header${groupActive ? ' active' : ''}`}
+                    className={() => "nav-item nav-group-header"}
                     end={true}
                   >
                     <group.Icon size={17} className="nav-icon" strokeWidth={2} />
@@ -165,37 +154,84 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
                       {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </span>
                   </NavLink>
-                  <div className={`sidebar-sub-items${isExpanded && !collapsed ? ' expanded' : ''}`}>
-                    {group.subItems!.map((sub) => (
-                      <NavLink
-                        key={sub.to}
-                        to={sub.to}
-                        end={sub.end}
-                        className={({ isActive }) => `nav-item sub-item${isActive ? ' active' : ''}`}
-                        tabIndex={isExpanded && !collapsed ? 0 : -1}
-                      >
-                        <span className="nav-text">{sub.label}</span>
-                        {sub.badge !== undefined && (
-                          <span className={`sub-badge ${sub.badgeType}`}>{sub.badge}</span>
-                        )}
-                      </NavLink>
-                    ))}
-                  </div>
+                  {!collapsed && (
+                    <div className={`sidebar-sub-items${isExpanded ? ' expanded' : ''}`}>
+                      {group.subItems!.map((sub) => (
+                        <NavLink
+                          key={sub.to}
+                          to={sub.to}
+                          end={sub.end}
+                          className={({ isActive }) => `nav-item sub-item${isActive ? ' active' : ''}`}
+                          tabIndex={isExpanded ? 0 : -1}
+                        >
+                          <span className="nav-text">{sub.label}</span>
+                          {sub.badge !== undefined && (
+                            <span className={`sub-badge ${sub.badgeType}`}>{sub.badge}</span>
+                          )}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
                 </>
               ) : (
                 <NavLink
                   to={group.to!}
-                  title={collapsed ? group.label : undefined}
                   className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
                 >
                   <group.Icon size={17} className="nav-icon" strokeWidth={2} />
                   <span className="nav-text">{group.label}</span>
                 </NavLink>
               )}
+
+              {/* Custom tooltip/popover when sidebar is collapsed */}
+              {collapsed && (
+                <div className={`sidebar-tooltip${!hasSubs ? ' simple' : ''}`}>
+                  {!hasSubs ? (
+                    <span>{group.label}</span>
+                  ) : (
+                    <>
+                      <div className="tooltip-header">{group.label}</div>
+                      <div className="tooltip-links">
+                        {group.subItems!.map((sub) => (
+                          <NavLink
+                            key={sub.to}
+                            to={sub.to}
+                            end={sub.end}
+                            className={({ isActive }) => `tooltip-link${isActive ? ' active' : ''}`}
+                          >
+                            <span>{sub.label}</span>
+                            {sub.badge !== undefined && (
+                              <span className={`sub-badge ${sub.badgeType}`}>{sub.badge}</span>
+                            )}
+                          </NavLink>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           )
         })}
       </nav>
+
+      {/* Standalone Settings above profile */}
+      <div className="sidebar-footer-actions">
+        <div className="sidebar-group-container" style={{ display: 'flex', flexDirection: 'column' }}>
+          <NavLink
+            to="/settings"
+            className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+          >
+            <Settings size={17} className="nav-icon" strokeWidth={2} />
+            <span className="nav-text">Settings</span>
+          </NavLink>
+          {collapsed && (
+            <div className="sidebar-tooltip simple">
+              <span>Settings</span>
+            </div>
+          )}
+        </div>
+      </div>
 
       <NavLink
         to="/settings/profile"
