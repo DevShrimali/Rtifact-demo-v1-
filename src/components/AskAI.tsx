@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Boxes, Box, Bell, Flame, LineChart, FileText, Layers, Send, Sparkles, X } from 'lucide-react'
+import { Boxes, Box, Bell, Flame, LineChart, FileText, Layers, Send, Sparkles, X, Plus } from 'lucide-react'
 import { useEnv } from '../state/env'
 import { getAskAIContext } from '../mock/askai'
 import type { AskAIContext } from '../mock/askai'
@@ -79,6 +79,11 @@ export function AskAIPanel() {
   const bodyRef = useRef<HTMLDivElement>(null)
   const ctx: AskAIContext = getAskAIContext(location.pathname, env.name)
 
+  const [references, setReferences] = useState<AskAIContext['references']>([])
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newKind, setNewKind] = useState<'env' | 'alert' | 'incident' | 'cluster' | 'pod' | 'metric' | 'logs' | 'view'>('env')
+  const [newLabel, setNewLabel] = useState('')
+
   /* DEV-16: panel is resizable on desktop (clamped + persisted); the mobile
      bottom sheet ignores this via the media query. */
   const [width, setWidth] = useState<number>(() => {
@@ -109,11 +114,13 @@ export function AskAIPanel() {
     localStorage.setItem('rtifact.askai.w', String(width))
   }, [width])
 
-  /* context switch (new surface) resets the conversation */
+  /* context switch (new surface) resets the conversation and references */
   useEffect(() => {
     setMessages([])
     setThinking(false)
-  }, [ctx.surface])
+    setReferences(ctx.references)
+    setShowAddForm(false)
+  }, [ctx.surface, env.name])
 
   useEffect(() => {
     if (!open) return
@@ -135,11 +142,36 @@ export function AskAIPanel() {
     setThinking(true)
     setTimeout(() => {
       setThinking(false)
+      
+      // Adapt response contextually
+      const currentSources = references.map(r => `${r.kind.toUpperCase()} · ${r.label}`)
+      let answerText = ctx.answer.text
+      if (references.length === 0) {
+        answerText = "I don't have any active context references. Please add context using the controls above to analyze specific telemetry, incidents, or resource metrics."
+      } else {
+        const refNames = references.map(r => r.label).join(', ')
+        answerText = `${ctx.answer.text} (Correlated dynamically using: ${refNames}).`
+      }
+
       setMessages((m) => [
         ...m,
-        { role: 'ai', text: ctx.answer.text, confidence: ctx.answer.confidence, sources: ctx.answer.sources },
+        { 
+          role: 'ai', 
+          text: answerText, 
+          confidence: references.length > 0 ? Math.min(99, ctx.answer.confidence + (references.length - ctx.references.length) * 2) : 45, 
+          sources: currentSources 
+        },
       ])
     }, 1100)
+  }
+
+  const handleAddReference = () => {
+    if (!newLabel.trim()) return
+    if (!references.some(r => r.kind === newKind && r.label.toLowerCase() === newLabel.trim().toLowerCase())) {
+      setReferences(prev => [...prev, { kind: newKind, label: newLabel.trim() }])
+    }
+    setNewLabel('')
+    setShowAddForm(false)
   }
 
   if (!open) return null
@@ -176,18 +208,101 @@ export function AskAIPanel() {
         </button>
       </header>
 
-      {/* reference-attaching mechanism: exactly what's in context */}
+      {/* reference-attaching mechanism with remove and add options */}
       <div className="askai-refs" aria-label="In context">
         <span className="askai-refs-label">In context</span>
-        {ctx.references.map((r) => {
+        {references.map((r) => {
           const Icon = REF_ICONS[r.kind]
           return (
             <span key={`${r.kind}-${r.label}`} className="askai-ref mono">
               <Icon size={11} strokeWidth={2.2} />
               {r.label}
+              <button
+                type="button"
+                className="askai-ref-remove"
+                onClick={() => setReferences(prev => prev.filter(item => item.label !== r.label || item.kind !== r.kind))}
+                aria-label={`Remove ${r.label}`}
+              >
+                <X size={10} strokeWidth={2.5} />
+              </button>
             </span>
           )
         })}
+
+        {showAddForm ? (
+          <div className="askai-add-ref-form">
+            <select
+              value={newKind}
+              onChange={(e) => setNewKind(e.target.value as any)}
+              className="askai-add-ref-select"
+            >
+              <option value="env">Env</option>
+              <option value="alert">Alert</option>
+              <option value="incident">Incident</option>
+              <option value="cluster">Cluster</option>
+              <option value="pod">Pod</option>
+              <option value="metric">Metric</option>
+              <option value="logs">Logs</option>
+              <option value="view">View</option>
+            </select>
+            <input
+              type="text"
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              placeholder="Context label..."
+              className="askai-add-ref-input"
+              list="askai-ref-suggestions"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleAddReference()
+                } else if (e.key === 'Escape') {
+                  setShowAddForm(false)
+                }
+              }}
+            />
+            <datalist id="askai-ref-suggestions">
+              <option value="cpu-utilization-series" />
+              <option value="memory-leak-check" />
+              <option value="p99-latency-metrics" />
+              <option value="postgres-active-conns" />
+              <option value="last-500-error-logs" />
+              <option value="correlated-traces" />
+              <option value="k8s-pod-events" />
+              <option value="network-ingress-egress" />
+              <option value="load-balancer-spikes" />
+            </datalist>
+            <button
+              type="button"
+              className="askai-add-ref-submit"
+              onClick={handleAddReference}
+              disabled={!newLabel.trim()}
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              className="askai-add-ref-cancel"
+              onClick={() => setShowAddForm(false)}
+              aria-label="Cancel adding context"
+            >
+              <X size={10} strokeWidth={2.5} />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="askai-add-ref-btn"
+            onClick={() => {
+              setShowAddForm(true)
+              setNewLabel('')
+            }}
+          >
+            <Plus size={11} strokeWidth={2.2} />
+            Add context
+          </button>
+        )}
       </div>
 
       <div className="askai-body" ref={bodyRef}>
@@ -211,7 +326,7 @@ export function AskAIPanel() {
             <div key={i} className="askai-msg ai">
               <p>{m.text}</p>
               {m.confidence !== undefined && <ConfidencePill value={m.confidence} />}
-              {m.sources && (
+              {m.sources && m.sources.length > 0 && (
                 <div className="askai-sources">
                   {m.sources.map((s) => (
                     <span key={s} className="askai-source mono">
