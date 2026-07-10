@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { PlugZap } from 'lucide-react'
+import { PlugZap, ChevronUp, ChevronDown } from 'lucide-react'
 import type { GraphNode } from '../../mock/telemetry'
 import { graphEdges, graphNodes, intelligenceStats } from '../../mock/telemetry'
 import { useEnv } from '../../state/env'
@@ -70,6 +70,7 @@ export function IntelligencePage() {
   const { env } = useEnv()
   const [searchParams] = useSearchParams()
   const [loading, setLoading] = useState(true)
+  const [collapsed, setCollapsed] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -78,17 +79,17 @@ export function IntelligencePage() {
   }, [env.id])
 
   const containerRef = useRef<HTMLDivElement>(null)
-  const [dimensions, setDimensions] = useState({ width: 810, height: 280 })
+  const [dimensions, setDimensions] = useState({ width: 810, height: 370 })
 
   useEffect(() => {
     if (!containerRef.current) return
     const rect = containerRef.current.getBoundingClientRect()
-    setDimensions({ width: rect.width || 810, height: 280 })
+    setDimensions({ width: rect.width || 810, height: 370 })
 
     const observer = new ResizeObserver((entries) => {
       for (let entry of entries) {
         if (entry.contentRect.width) {
-          setDimensions({ width: entry.contentRect.width, height: 280 })
+          setDimensions({ width: entry.contentRect.width, height: 370 })
         }
       }
     })
@@ -108,7 +109,7 @@ export function IntelligencePage() {
           n.id,
           {
             x: (n.x / 810) * dimensions.width,
-            y: (n.y / 280) * dimensions.height,
+            y: (n.y / 370) * dimensions.height,
           },
         ])
       )
@@ -157,7 +158,16 @@ export function IntelligencePage() {
     dragging.current = null
   }, [])
 
-  /* ── empty / loading states ── */
+  /* ── empty / loading / error states ── */
+  if (searchParams.get('state') === 'error') {
+    return (
+      <div className="error-panel" role="alert">
+        <div className="error-title">Intelligence pipeline unavailable</div>
+        <div className="error-sub">Unable to build the service graph. Check your telemetry connections.</div>
+      </div>
+    )
+  }
+
   if (searchParams.get('state') === 'empty') {
     return (
       <div className="placeholder-panel" style={{ padding: 44 }}>
@@ -177,10 +187,10 @@ export function IntelligencePage() {
     )
   }
 
-  if (loading) {
+  if (loading || searchParams.get('state') === 'loading') {
     return (
       <div className="panel" aria-busy="true">
-        <span className="skeleton" style={{ width: '100%', height: 320, display: 'block' }} />
+        <span className="skeleton" style={{ width: '100%', height: 370, display: 'block' }} />
       </div>
     )
   }
@@ -205,12 +215,20 @@ export function IntelligencePage() {
             <span className="legend-item" style={{ color: 'var(--faint)', fontStyle: 'italic' }}>drag to rearrange</span>
           </div>
 
+          <button
+            className="graph-collapse-btn"
+            onClick={() => setCollapsed((c) => !c)}
+            aria-label={collapsed ? 'Expand graph' : 'Collapse graph'}
+            title={collapsed ? 'Expand' : 'Collapse'}
+          >
+            {collapsed ? <ChevronDown size={14} strokeWidth={2.2} /> : <ChevronUp size={14} strokeWidth={2.2} />}
+          </button>
         </div>
 
         <svg
           ref={svgRef}
           viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
-          className="dep-graph"
+          className={`dep-graph${collapsed ? ' dep-graph--collapsed' : ''}`}
           role="img"
           aria-label="Service dependency graph"
           style={{ cursor: dragging.current ? 'grabbing' : 'default' }}

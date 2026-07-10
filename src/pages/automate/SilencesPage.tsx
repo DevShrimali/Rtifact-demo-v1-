@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom'
 import { BellOff, Plus, X } from 'lucide-react'
 import { seedSilences, SILENCE_PATTERNS } from '../../mock/automateExtras'
 import type { Silence } from '../../mock/automateExtras'
-import { AutomateSubnav } from './AutomateSubnav'
 import { ListSkeleton, useEnvLoad } from '../../components/PageLoad'
 
 function ExpiryCountdown({ minutes }: { minutes: number }) {
@@ -66,8 +65,6 @@ export function SilencesPage() {
           New silence
         </button>
       </div>
-
-      <AutomateSubnav />
 
       {creating && (
         <section className="panel form-panel" style={{ maxWidth: 'none' }}>

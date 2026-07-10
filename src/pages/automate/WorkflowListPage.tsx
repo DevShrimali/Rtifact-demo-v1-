@@ -5,7 +5,6 @@ import { workflows as seed } from '../../mock/workflows'
 import type { Workflow } from '../../mock/workflows'
 import { TimeAgo } from '../../components/TimeAgo'
 import { useEnv } from '../../state/env'
-import { AutomateSubnav } from './AutomateSubnav'
 
 /* Screen 18 — Workflow list: dense, scannable, with live status toggles.
    States: Default · Empty · Loading (`?state=` pins empty/loading). */
@@ -61,8 +60,6 @@ export function WorkflowListPage() {
           Create workflow
         </Link>
       </div>
-
-      <AutomateSubnav />
 
       <div className="stats-bar" style={{ marginBottom: 14 }}>
         {(

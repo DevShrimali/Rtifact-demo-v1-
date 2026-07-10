@@ -2,7 +2,6 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { CheckCircle2, Lock, MinusCircle, OctagonX, Plus } from 'lucide-react'
 import { auditLog, executions, templates } from '../../mock/automateExtras'
 import { TimeAgo } from '../../components/TimeAgo'
-import { AutomateSubnav } from './AutomateSubnav'
 import { ListSkeleton, useEnvLoad } from '../../components/PageLoad'
 
 /* Screen 43 — Templates. */
@@ -26,8 +25,6 @@ export function TemplatesPage() {
           New template
         </button>
       </div>
-
-      <AutomateSubnav />
 
       {loading ? (
         <ListSkeleton rows={4} />
@@ -81,8 +78,6 @@ export function ExecutionsPage() {
         </div>
       </div>
 
-      <AutomateSubnav />
-
       {loading ? (
         <ListSkeleton rows={6} />
       ) : (
@@ -127,8 +122,6 @@ export function AuditLogPage() {
           </p>
         </div>
       </div>
-
-      <AutomateSubnav />
 
       {loading ? (
         <ListSkeleton rows={6} />

@@ -101,14 +101,18 @@ export function AlertDetailPage() {
 
   return (
     <>
-      <div className={`sev-banner sev-${scenario.severity}${resolved ? ' resolved' : ''}`}>
-        <SeverityBadge severity={scenario.severity} />
-        <span className="row-id">{scenario.alertId}</span>
-        <span className="sev-banner-title">{scenario.title}</span>
-        <span className="mono service">{scenario.service}</span>
-        <span className="time-ref">
-          {resolved ? 'Resolved' : `Active ${activeFor}m`} · {env.name}
-        </span>
+      <div className={`sev-banner sev-${scenario.severity}${resolved ? ' resolved' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span className="row-id" style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)' }}>{scenario.alertId}</span>
+          <span className="sev-banner-title" style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>{scenario.title}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span className="mono service" style={{ background: 'var(--surface)', padding: '3px 8px', borderRadius: 4, border: '1px solid var(--border)' }}>{scenario.service}</span>
+          <span className="time-ref" style={{ color: 'var(--muted)', fontSize: 11.5 }}>
+            {resolved ? 'Resolved' : `Active ${activeFor}m`} · {env.name}
+          </span>
+          <SeverityBadge severity={scenario.severity} />
+        </div>
       </div>
 
       <DaavProgress viewing={viewing} unlocked={unlocked} onSelect={setViewing} />

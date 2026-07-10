@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { getSyntheticChecks } from '../../mock/telemetry'
 import type { SyntheticCheck } from '../../mock/telemetry'
 import { Sparkline } from '../../components/Sparkline'
 import { TimeAgo } from '../../components/TimeAgo'
 import { useEnv } from '../../state/env'
+import { useEnvLoad, ListSkeleton } from '../../components/PageLoad'
 
 const STATUS_CLS: Record<SyntheticCheck['status'], { label: string; cls: string }> = {
   passing: { label: 'Passing', cls: 'sev-healthy' },
@@ -16,11 +17,25 @@ const STATUS_CLS: Record<SyntheticCheck['status'], { label: string; cls: string 
    sparkline / uptime / status / alerts / last run. States: Default · Empty. */
 export function SyntheticPage() {
   const { env } = useEnv()
+  const [searchParams] = useSearchParams()
+  const forcedState = searchParams.get('state')
+  const loading = useEnvLoad()
   const checks = getSyntheticChecks(env.id)
   const passing = checks.filter((c) => c.status === 'passing').length
   const failing = checks.filter((c) => c.status === 'failing').length
   const avgUptime =
     checks.length > 0 ? (checks.reduce((s, c) => s + c.uptimePct, 0) / checks.length).toFixed(2) : '—'
+
+  if (loading) return <ListSkeleton rows={5} />
+
+  if (forcedState === 'error') {
+    return (
+      <div className="error-panel" role="alert">
+        <div className="error-title">Synthetic monitoring unavailable</div>
+        <div className="error-sub">The synthetic check runner is temporarily offline.</div>
+      </div>
+    )
+  }
 
   return (
     <>

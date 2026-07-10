@@ -3,7 +3,6 @@ import { CheckCircle2, MinusCircle, OctagonX } from 'lucide-react'
 import { RUNBOOK_TOTAL, runbooks } from '../../mock/automateExtras'
 import { ConfidencePill } from '../../components/Confidence'
 import { TimeAgo } from '../../components/TimeAgo'
-import { AutomateSubnav } from './AutomateSubnav'
 import { ListSkeleton, useEnvLoad } from '../../components/PageLoad'
 
 /* Screen 40 — Playbooks/Runbooks list. */
@@ -26,8 +25,6 @@ export function PlaybooksPage() {
         </div>
         <button className="btn btn-primary">New runbook</button>
       </div>
-
-      <AutomateSubnav />
 
       {loading ? (
         <ListSkeleton rows={5} />

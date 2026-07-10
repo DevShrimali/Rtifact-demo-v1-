@@ -24,7 +24,26 @@ interface StampedLine extends LogLine {
    Logs lens. `?view=explorer` deeplinks straight into the explorer. */
 export function LogsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const forcedState = searchParams.get('state')
   const mode = searchParams.get('view') === 'explorer' ? 'explorer' : 'live'
+
+  if (forcedState === 'error') {
+    return (
+      <div className="error-panel" role="alert">
+        <div className="error-title">Log pipeline unavailable</div>
+        <div className="error-sub">The log ingestion pipeline is temporarily offline or unreachable.</div>
+      </div>
+    )
+  }
+
+  if (forcedState === 'empty') {
+    return (
+      <div className="placeholder-panel">
+        No log data found.
+        <span className="mono">connect a log source to start streaming</span>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -47,12 +66,12 @@ export function LogsPage() {
         </button>
       </div>
 
-      {mode === 'explorer' ? <LogsExplorer /> : <LiveStream />}
+      {mode === 'explorer' ? <LogsExplorer /> : <LiveStream forceLoading={forcedState === 'loading'} />}
     </>
   )
 }
 
-function LiveStream() {
+function LiveStream({ forceLoading = false }: { forceLoading?: boolean }) {
   const { env } = useEnv()
   const [loading, setLoading] = useState(true)
   const [level, setLevel] = useState<(typeof LEVELS)[number]>('all')
@@ -86,7 +105,7 @@ function LiveStream() {
 
   const visible = lines.filter((l) => level === 'all' || l.level === level)
 
-  if (loading) {
+  if (loading || forceLoading) {
     return (
       <div className="panel" aria-busy="true">
         <span className="skeleton skeleton-text" style={{ width: '40%' }} />

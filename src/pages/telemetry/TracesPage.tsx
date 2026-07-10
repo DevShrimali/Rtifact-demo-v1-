@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ArrowRight, Plus, Search } from 'lucide-react'
 import { flowAnomalies, traceLatency, traceLayers, traceStats, TRACE_FILTER_FIELDS } from '../../mock/telemetry'
 import { ConfidencePill } from '../../components/Confidence'
@@ -9,6 +10,8 @@ import { useEnv } from '../../state/env'
    (Ingress → Core → App → Dependencies), AI Flow Anomalies below. */
 export function TracesPage() {
   const { env } = useEnv()
+  const [searchParams] = useSearchParams()
+  const forcedState = searchParams.get('state')
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<{ field: string; value: string }[]>([
     { field: 'status', value: 'error' },
@@ -28,7 +31,25 @@ export function TracesPage() {
     setValue('')
   }
 
-  if (loading) {
+  if (forcedState === 'error') {
+    return (
+      <div className="error-panel" role="alert">
+        <div className="error-title">Tracing pipeline unavailable</div>
+        <div className="error-sub">The distributed tracing backend is temporarily offline.</div>
+      </div>
+    )
+  }
+
+  if (forcedState === 'empty') {
+    return (
+      <div className="placeholder-panel">
+        No trace data found.
+        <span className="mono">instrument your services with OpenTelemetry to see traces here</span>
+      </div>
+    )
+  }
+
+  if (loading || forcedState === 'loading') {
     return (
       <div className="panel" aria-busy="true">
         <span className="skeleton skeleton-text" style={{ width: '35%' }} />

@@ -171,11 +171,21 @@ const boards: Record<string, AlertsBoard> = {
 
 export function getBoard(envId: string): AlertsBoard {
   const board = boards[envId] ?? boards['dev']
-  if (envId === 'dev' || !board.alerts || board.alerts.length === 0) {
-    return {
-      ...board,
-      alerts: boards['prod-us'].alerts,
-    }
-  }
-  return board
+  const prodBoard = boards['prod-us']
+
+  // Fall back alerts to prod-us if the current env has none
+  const alerts =
+    !board.alerts || board.alerts.length === 0 ? prodBoard.alerts : board.alerts
+
+  // Fall back metrics to prod-us if MTTD is a placeholder dash
+  const metrics =
+    board.metrics.mttd === '—' ? prodBoard.metrics : board.metrics
+
+  // Fall back goals similarly if MTTR goal has a placeholder
+  const goals =
+    board.goals.find((g) => g.id === 'mttr' && g.current === '—')
+      ? prodBoard.goals
+      : board.goals
+
+  return { ...board, alerts, metrics, goals }
 }

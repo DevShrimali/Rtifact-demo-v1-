@@ -1,19 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { BellOff, RefreshCw, TrendingDown, TrendingUp, WifiOff, Sparkles, LayoutGrid, List } from 'lucide-react'
+import { RefreshCw, WifiOff, Sparkles, LayoutGrid, List, Search } from 'lucide-react'
 import { useEnv } from '../state/env'
 import { getBoard } from '../mock/alerts'
 import { primaryCluster } from '../mock/infra'
-import type { Alert, AlertColumn } from '../mock/alerts'
+import type { Alert } from '../mock/alerts'
 import { SeverityBadge } from '../components/SeverityBadge'
 import { TimeAgo } from '../components/TimeAgo'
 import { OptimizationGoals } from '../components/OptimizationGoals'
-
-const COLUMNS: { key: AlertColumn; title: string }[] = [
-  { key: 'new', title: 'New' },
-  { key: 'in_progress', title: 'In Progress' },
-  { key: 'resolved', title: 'Resolved' },
-]
 
 type ViewState = 'loading' | 'default' | 'empty' | 'error'
 
@@ -27,6 +21,13 @@ export function CommandPage() {
   const [loaded, setLoaded] = useState(false)
   const [viewMode, setViewMode] = useState<'board' | 'list'>('board')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  
+  // Grouping state: Status vs Actionables
+  const [groupBy, setGroupBy] = useState<'status' | 'actionables'>('status')
+  
+  // Active Tab state for List view (initialized to 'new' or 'actionable')
+  const [activeTab, setActiveTab] = useState<string>('new')
 
   useEffect(() => {
     setLoaded(false)
@@ -48,9 +49,21 @@ export function CommandPage() {
   const active = rawAlerts.filter((a) => a.column !== 'resolved')
   const criticalCount = active.filter((a) => a.severity === 'critical').length
 
-  const filteredAlerts = priorityFilter === 'all'
+  // Filter alerts by Priority Selector
+  const priorityFiltered = priorityFilter === 'all'
     ? rawAlerts
     : rawAlerts.filter((a) => a.severity === priorityFilter)
+
+  // Filter alerts by Search Input Query (filters by id, title, service)
+  const searchedAlerts = priorityFiltered.filter((a) => {
+    const q = searchQuery.toLowerCase().trim()
+    if (!q) return true
+    return (
+      a.id.toLowerCase().includes(q) ||
+      a.title.toLowerCase().includes(q) ||
+      a.service.toLowerCase().includes(q)
+    )
+  })
 
   const SEVERITY_RANK = {
     critical: 1,
@@ -59,8 +72,65 @@ export function CommandPage() {
     low: 4,
   }
 
-  const sortedAlerts = [...filteredAlerts].sort((a, b) => {
+  // Sorted by severity rank
+  const sortedAlerts = [...searchedAlerts].sort((a, b) => {
     return SEVERITY_RANK[a.severity as keyof typeof SEVERITY_RANK] - SEVERITY_RANK[b.severity as keyof typeof SEVERITY_RANK]
+  })
+
+  // Switcher mapping handler to ensure activeTab remains valid
+  const handleGroupByChange = (groupMode: 'status' | 'actionables') => {
+    setGroupBy(groupMode)
+    if (groupMode === 'status') {
+      if (activeTab === 'actionable') {
+        setActiveTab('new')
+      } else if (activeTab === 'automated_resolved') {
+        setActiveTab('resolved')
+      } else {
+        setActiveTab('new')
+      }
+    } else {
+      if (activeTab === 'new' || activeTab === 'in_progress') {
+        setActiveTab('actionable')
+      } else if (activeTab === 'resolved') {
+        setActiveTab('automated_resolved')
+      } else {
+        setActiveTab('actionable')
+      }
+    }
+  }
+
+  // Compute Kanban Board Columns dynamically
+  const columns = groupBy === 'status'
+    ? [
+        { key: 'new', title: 'New', items: sortedAlerts.filter((a) => a.column === 'new') },
+        { key: 'in_progress', title: 'In Progress', items: sortedAlerts.filter((a) => a.column === 'in_progress') },
+        { key: 'resolved', title: 'Resolved', items: sortedAlerts.filter((a) => a.column === 'resolved') },
+      ]
+    : [
+        { key: 'actionable', title: 'Actionable', items: sortedAlerts.filter((a) => a.column === 'new' || a.column === 'in_progress') },
+        { key: 'automated_resolved', title: 'Automated / Resolved', items: sortedAlerts.filter((a) => a.column === 'resolved') },
+      ]
+
+  // Compute List Tabs dynamically
+  const listTabs = groupBy === 'status'
+    ? [
+        { key: 'new', label: 'New', count: sortedAlerts.filter((a) => a.column === 'new').length },
+        { key: 'in_progress', label: 'In Progress', count: sortedAlerts.filter((a) => a.column === 'in_progress').length },
+        { key: 'resolved', label: 'Resolved', count: sortedAlerts.filter((a) => a.column === 'resolved').length },
+      ]
+    : [
+        { key: 'actionable', label: 'Actionable', count: sortedAlerts.filter((a) => a.column === 'new' || a.column === 'in_progress').length },
+        { key: 'automated_resolved', label: 'Automated / Resolved', count: sortedAlerts.filter((a) => a.column === 'resolved').length },
+      ]
+
+  // Filter list rows by active tab filter
+  const filteredListAlerts = sortedAlerts.filter((a) => {
+    if (activeTab === 'new') return a.column === 'new'
+    if (activeTab === 'in_progress') return a.column === 'in_progress'
+    if (activeTab === 'resolved') return a.column === 'resolved'
+    if (activeTab === 'actionable') return a.column === 'new' || a.column === 'in_progress'
+    if (activeTab === 'automated_resolved') return a.column === 'resolved'
+    return true
   })
 
   return (
@@ -80,6 +150,35 @@ export function CommandPage() {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Search Box */}
+          <div className="search-input-container">
+            <Search size={14} className="search-icon-svg" />
+            <input
+              type="text"
+              placeholder="Search alerts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="text-input"
+              style={{ fontSize: '12.5px', padding: '6px 10px 6px 30px', width: '160px' }}
+            />
+          </div>
+
+          {/* Grouping switcher */}
+          <div className="group-switcher-segment">
+            <button
+              className={`segment-btn ${groupBy === 'status' ? 'active' : ''}`}
+              onClick={() => handleGroupByChange('status')}
+            >
+              Status
+            </button>
+            <button
+              className={`segment-btn ${groupBy === 'actionables' ? 'active' : ''}`}
+              onClick={() => handleGroupByChange('actionables')}
+            >
+              Actionables
+            </button>
+          </div>
+
           {/* Priority Filter */}
           <select
             className="text-input select"
@@ -131,11 +230,6 @@ export function CommandPage() {
               <List size={14} strokeWidth={2.2} />
             </button>
           </div>
-
-          <button className="btn btn-primary" disabled={state !== 'default'}>
-            <BellOff size={14} strokeWidth={2.2} />
-            Silence noise
-          </button>
         </div>
       </div>
 
@@ -143,8 +237,8 @@ export function CommandPage() {
         <ErrorPanel envName={env.name} />
       ) : (
         <>
-          <MetricsBanner board={board} loading={state === 'loading'} />
-          <HealthTiles board={board} loading={state === 'loading'} />
+          {/* Combined Unified Telemetry & Health Status Banner */}
+          <UnifiedTelemetryBanner board={board} loading={state === 'loading'} />
 
           <div className="section-label">Optimization goals</div>
           {state === 'loading' ? <GoalsSkeleton /> : <OptimizationGoals goals={board.goals} />}
@@ -160,46 +254,80 @@ export function CommandPage() {
 
           {state === 'loading' ? (
             viewMode === 'board' ? <BoardSkeleton /> : <ListSkeleton />
-          ) : state === 'empty' || filteredAlerts.length === 0 ? (
+          ) : state === 'empty' || sortedAlerts.length === 0 ? (
             <EmptyBoard envName={env.name} />
           ) : viewMode === 'board' ? (
             <div className="kanban">
-              {COLUMNS.map((col) => {
-                const items = filteredAlerts.filter((a) => a.column === col.key)
+              {columns.map((col) => {
                 return (
                   <section key={col.key} className="kanban-col" aria-label={col.title}>
                     <header className="kanban-head">
                       <span className="kanban-title">{col.title}</span>
-                      <span className="kanban-count mono">{items.length}</span>
+                      <span className="kanban-count mono">{col.items.length}</span>
                     </header>
-                    {items.map((a) => (
+                    {col.items.map((a) => (
                       <AlertCard key={a.id} alert={a} />
                     ))}
-                    {items.length === 0 && <div className="kanban-empty">None</div>}
+                    {col.items.length === 0 && <div className="kanban-empty">None</div>}
                   </section>
                 )
               })}
             </div>
           ) : (
-            <div className="row-list">
-              {sortedAlerts.map((a) => (
-                <Link key={a.id} to={`/command/alerts/${a.id}`} className="row incident-row">
-                  <span className="row-id">{a.id}</span>
-                  <SeverityBadge severity={a.severity} />
-                  <span className="row-title" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {a.title}
-                    {a.aiOutcome && (
-                      <span className="ai-tag">
-                        <Sparkles size={10} strokeWidth={2.2} />
-                        {a.aiOutcome}
+            <>
+              {/* Grouped tabs similar to incidents list view */}
+              <div className="pipeline-tabs" role="tablist" aria-label="Alerts tabs pipeline" style={{ marginBottom: 14 }}>
+                {listTabs.map((p) => {
+                  return (
+                    <button
+                      key={p.key}
+                      role="tab"
+                      aria-selected={activeTab === p.key}
+                      className={`pipeline-tab${activeTab === p.key ? ' active' : ''}`}
+                      onClick={() => setActiveTab(p.key)}
+                    >
+                      {p.label}
+                      {p.count > 0 && <span className="tab-count mono">{p.count}</span>}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {filteredListAlerts.length === 0 ? (
+                <div className="placeholder-panel">
+                  Nothing in “{listTabs.find((p) => p.key === activeTab)?.label}” right now.
+                </div>
+              ) : (
+                <div className="row-list">
+                  {filteredListAlerts.map((a) => (
+                    <Link key={a.id} to={`/command/alerts/${a.id}`} className="row incident-row">
+                      <span className="row-id">{a.id}</span>
+                      <SeverityBadge severity={a.severity} />
+                      <span className="row-title" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {a.title}
                       </span>
-                    )}
-                  </span>
-                  <span className="mono service">{a.service}</span>
-                  <TimeAgo timestamp={a.startedAt} />
-                </Link>
-              ))}
-            </div>
+                      <span className="mono service">{a.service}</span>
+                      
+                      {/* Seamless Integrated RCA/AI Outcome */}
+                      {a.activity && (
+                        <span className="alert-ai-inline in-progress">
+                          <Sparkles size={11} strokeWidth={2.2} className="ai-icon" />
+                          {a.activity}
+                        </span>
+                      )}
+                      {a.aiOutcome && (
+                        <span className="alert-ai-inline resolved">
+                          <Sparkles size={11} strokeWidth={2.2} className="ai-icon" />
+                          {a.aiOutcome}
+                        </span>
+                      )}
+
+                      <TimeAgo timestamp={a.startedAt} />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </>
       )}
@@ -218,89 +346,146 @@ function AlertCard({ alert }: { alert: Alert }) {
       <div className="alert-card-title">{alert.title}</div>
       <div className="alert-card-meta">
         <span className="mono service">{alert.service}</span>
-        {alert.activity && <span className="alert-activity">{alert.activity}</span>}
-        {alert.aiOutcome && <span className="alert-ai-outcome">{alert.aiOutcome}</span>}
       </div>
+
+      {/* Seamless Integrated RCA/AI Insight Row */}
+      {alert.activity && (
+        <div className="alert-card-ai-row in-progress">
+          <Sparkles size={11} strokeWidth={2.2} className="ai-icon" />
+          <span>{alert.activity}</span>
+        </div>
+      )}
+      {alert.aiOutcome && (
+        <div className="alert-card-ai-row resolved">
+          <Sparkles size={11} strokeWidth={2.2} className="ai-icon" />
+          <span>{alert.aiOutcome}</span>
+        </div>
+      )}
     </Link>
   )
 }
 
-function MetricsBanner({ board, loading }: { board: ReturnType<typeof getBoard>; loading: boolean }) {
+/* Unified high-density horizontal telemetry and health status banner */
+function UnifiedTelemetryBanner({ board, loading }: { board: ReturnType<typeof getBoard>; loading: boolean }) {
   const m = board.metrics
-  const stats = [
-    { label: 'MTTD', value: m.mttd, delta: m.mttdDelta },
-    { label: 'MTTR', value: m.mttr, delta: m.mttrDelta },
-    { label: 'Noise ratio', value: m.noiseRatio, delta: m.noiseDelta },
-  ]
-  return (
-    <div className="metrics-banner">
-      {stats.map((s) => (
-        <div key={s.label} className="metric">
-          <span className="stat-label">{s.label}</span>
-          {loading ? (
-            <span className="skeleton skeleton-text" />
-          ) : (
-            <span className="metric-value mono">
-              {s.value}
-              <span className={`delta ${s.delta.good ? 'good' : 'bad'}`}>
-                {s.delta.good ? (
-                  <TrendingDown size={12} strokeWidth={2.2} />
-                ) : (
-                  <TrendingUp size={12} strokeWidth={2.2} />
-                )}
-                {s.delta.value}
-              </span>
-            </span>
-          )}
-        </div>
-      ))}
-      <div className="metric ai-metric">
-        <span className="stat-label">Rtifact AI contribution</span>
-        {loading ? (
-          <span className="skeleton skeleton-text" />
-        ) : (
-          <span className="metric-value" style={{ fontSize: 13, fontWeight: 600 }}>
-            {m.aiContribution}
-          </span>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function HealthTiles({ board, loading }: { board: ReturnType<typeof getBoard>; loading: boolean }) {
   const { env } = useEnv()
   const cluster = primaryCluster(env.id)
 
+  if (loading) {
+    return (
+      <div className="unified-telemetry-banner loading">
+        <div className="banner-stats-section">
+          {[0, 1, 2, 3].map((i) => (
+            <span key={i} className="skeleton" style={{ width: 90, height: 16, borderRadius: 4 }} />
+          ))}
+        </div>
+        <div className="banner-right-wrapper">
+          <div className="banner-separator" />
+          <div className="banner-health-section">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <span key={i} className="skeleton" style={{ width: 70, height: 16, borderRadius: 4 }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const items = [
+    {
+      label: 'MTTD',
+      value: m.mttd,
+      delta: m.mttdDelta,
+      status: m.mttdDelta.good ? 'good' : 'bad',
+      desc: 'Mean Time To Detect anomalies in incoming server metrics.',
+    },
+    {
+      label: 'MTTR',
+      value: m.mttr,
+      delta: m.mttrDelta,
+      status: m.mttrDelta.good ? 'good' : 'bad',
+      desc: 'Mean Time To Resolve triggered alerts back to a healthy state.',
+    },
+    {
+      label: 'Noise ratio',
+      value: m.noiseRatio,
+      delta: m.noiseDelta,
+      status: m.noiseDelta.good ? 'good' : 'bad',
+      desc: 'Percentage of non-actionable alert notifications silenced.',
+    },
+    {
+      label: 'Auto-resolved (30d)',
+      value: '64%',
+      delta: { value: '↑11%', good: true },
+      status: 'good',
+      desc: 'Proportion of alerts automatically verified & resolved by playbooks.',
+    },
+  ]
+
   return (
-    <div className="tiles-row">
-      {board.tiles.map((t) => {
-        const inner = loading ? (
-          <span className="skeleton skeleton-text" style={{ width: '80%' }} />
-        ) : (
-          <>
-            <span className="tile-top">
-              <span className={`dot ${t.health}`} />
-              <span className="tile-name">{t.name}</span>
-            </span>
-            <span className="tile-metric mono">{t.metric}</span>
-            <TimeAgo timestamp={t.checkedAt} />
-          </>
-        )
-        /* Compute tile drills into the cluster (env › cluster › pod, DEV-8) */
-        if (t.id === 'compute' && cluster && !loading) {
+    <div className="unified-telemetry-banner">
+      <div className="banner-stats-section">
+        {items.map((it) => {
+          const formattedDelta = it.delta.value
+            .replace(' wk', '')
+            .replace('−', '↓')
+            .replace('+', '↑')
+            .replace('↑', '↑')
+            .replace('↓', '↓')
+            .trim()
+
           return (
-            <Link key={t.id} to={`/command/clusters/${cluster.id}`} className="health-tile">
-              {inner}
-            </Link>
+            <div key={it.label} className="banner-stat-item">
+              <span className="banner-stat-label">{it.label}</span>
+              <span className="banner-stat-value mono">{it.value}</span>
+              <span className={`banner-stat-delta ${it.status}`}>
+                {formattedDelta.startsWith('↑') || formattedDelta.startsWith('↓') ? '' : (it.status === 'good' ? '↓ ' : '↑ ')}
+                {formattedDelta}
+              </span>
+              
+              {/* Rich CSS Tooltip */}
+              <div className="stat-tooltip">
+                <div className="stat-tooltip-header">{it.desc.split(' ')[0]} telemetry</div>
+                <div className="stat-tooltip-body">
+                  <span className="stat-tooltip-value">{it.value}</span>
+                  <span className={`stat-tooltip-delta ${it.status === 'good' ? 'good' : 'bad'}`}>
+                    {it.delta.value}
+                  </span>
+                </div>
+                <div className="stat-tooltip-desc">{it.desc}</div>
+              </div>
+            </div>
           )
-        }
-        return (
-          <button key={t.id} className="health-tile" disabled={loading}>
-            {inner}
-          </button>
-        )
-      })}
+        })}
+      </div>
+
+      <div className="banner-right-wrapper">
+        <div className="banner-separator" />
+        <div className="banner-health-section">
+          {board.tiles.map((t) => {
+            const isCompute = t.id === 'compute' && cluster
+            const content = (
+              <>
+                <span className={`unified-health-dot ${t.health}`} />
+                <span>{t.name}</span>
+              </>
+            )
+            
+            if (isCompute) {
+              return (
+                <Link key={t.id} to={`/command/clusters/${cluster.id}`} className="health-dot-item interactive">
+                  {content}
+                </Link>
+              )
+            }
+            return (
+              <span key={t.id} className="health-dot-item">
+                {content}
+              </span>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }
@@ -358,9 +543,14 @@ function GoalsSkeleton() {
 }
 
 function BoardSkeleton() {
+  const cols = [
+    { key: 'new', title: 'New' },
+    { key: 'in_progress', title: 'In Progress' },
+    { key: 'resolved', title: 'Resolved' },
+  ]
   return (
     <div className="kanban" aria-busy="true" aria-label="Loading alerts">
-      {COLUMNS.map((c) => (
+      {cols.map((c) => (
         <section key={c.key} className="kanban-col">
           <header className="kanban-head">
             <span className="kanban-title">{c.title}</span>

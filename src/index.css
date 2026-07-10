@@ -2990,7 +2990,7 @@ a.crumb:active {
 .graph-legend {
   display: flex;
   gap: 14px;
-  margin-right: auto;
+  flex: 1;
 }
 
 .legend-item {
@@ -3003,9 +3003,43 @@ a.crumb:active {
 
 .dep-graph {
   width: 100%;
-  height: 280px;
+  height: 370px;
   display: block;
   background: var(--surface);
+  transition: height 0.25s ease, opacity 0.2s ease;
+  overflow: hidden;
+}
+
+.dep-graph--collapsed {
+  height: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.graph-collapse-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.graph-collapse-btn:hover {
+  background: var(--chip);
+  color: var(--fg);
+  border-color: var(--border-strong);
+}
+
+.graph-collapse-btn:active {
+  background: var(--border);
 }
 
 .dep-node {
@@ -4651,7 +4685,7 @@ select.text-input {
 
 .settings-rail {
   position: sticky;
-  top: 0;
+  top: 28px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -4791,10 +4825,10 @@ select.text-input {
   background: var(--card);
   border: 1px solid var(--border-strong);
   border-radius: 30px;
-  padding: 4px 6px 4px 14px;
+  padding: 4px 4px 4px 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -4846,6 +4880,70 @@ select.text-input {
   color: var(--fg);
   font-weight: 600;
 }
+
+/* Minimise chevron button */
+.ssw-minimise {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.ssw-minimise:hover {
+  background: var(--chip);
+  color: var(--fg);
+}
+
+/* ── Minimised icon-only pill ── */
+.screen-state-widget--min {
+  padding: 0;
+  border-radius: 50%;
+  gap: 0;
+}
+
+.ssw-min-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px 7px 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.ssw-min-btn:hover {
+  color: var(--fg);
+  background: var(--chip);
+}
+
+/* Active-state indicator dot */
+.ssw-dot {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--card);
+}
+
+.ssw-dot--loading { background: var(--brand); }
+.ssw-dot--empty   { background: var(--warn); }
+.ssw-dot--error   { background: var(--error); }
 
 /* Sidebar collapsible hierarchical tree navigation */
 .sidebar-sub-items {
@@ -5427,4 +5525,328 @@ select.text-input {
 *:hover {
   scrollbar-color: var(--border) transparent;
 }
+
+/* ──────────────────────────────────────────────────────────
+   Alerts Screen Enhancements: stats dots, search, segments, RCA
+   ────────────────────────────────────────────────────────── */
+
+/* 1. Metrics Banner to Compact Dots */
+/* 1. Unified Telemetry & Health Banner */
+.unified-telemetry-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  gap: 16px;
+}
+
+.unified-telemetry-banner.loading {
+  pointer-events: none;
+}
+
+.banner-stats-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.banner-stat-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.banner-stat-label {
+  color: var(--faint);
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.banner-stat-value {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.banner-stat-delta {
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.banner-stat-delta.good {
+  color: var(--success);
+}
+
+.banner-stat-delta.bad {
+  color: var(--warn);
+}
+
+.banner-right-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.banner-separator {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+}
+
+.banner-health-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.health-dot-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.health-dot-item.interactive {
+  cursor: pointer;
+  transition: color 0.1s ease;
+}
+
+.health-dot-item.interactive:hover {
+  color: var(--fg);
+}
+
+.unified-health-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.unified-health-dot.healthy {
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
+}
+
+.unified-health-dot.degraded {
+  background: var(--warn);
+  box-shadow: 0 0 6px var(--warn);
+}
+
+.unified-health-dot.critical {
+  background: var(--danger);
+  box-shadow: 0 0 6px var(--danger);
+}
+
+/* Rich hover tooltip */
+.stat-tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  width: 220px;
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: var(--shadow);
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+}
+
+.banner-stat-item:hover .stat-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Adjust the first stat item's tooltip position to align left, preventing it from clipping off the left edge of the page canvas container */
+.banner-stat-item:first-child .stat-tooltip {
+  left: 0;
+  transform: translateY(4px);
+}
+
+.banner-stat-item:first-child:hover .stat-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.stat-tooltip-header {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.stat-tooltip-body {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.stat-tooltip-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--fg);
+}
+
+.stat-tooltip-delta {
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+}
+
+.stat-tooltip-delta.good {
+  color: var(--success);
+}
+
+.stat-tooltip-delta.bad {
+  color: var(--warn);
+}
+
+.stat-tooltip-desc {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* 2. Group Switcher segmented control */
+.group-switcher-segment {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.segment-btn {
+  border: none;
+  background: transparent;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.12s ease;
+}
+
+.segment-btn:hover {
+  color: var(--fg);
+}
+
+.segment-btn.active {
+  background: var(--chip);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+/* 3. Search input with prepended icon */
+.search-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input-container input {
+  padding-left: 30px;
+}
+
+.search-icon-svg {
+  position: absolute;
+  left: 10px;
+  color: var(--faint);
+  pointer-events: none;
+}
+
+/* 4. Integrated AI / RCA Card Row */
+.alert-card-ai-row {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.alert-card-ai-row.in-progress {
+  color: var(--brand);
+}
+
+.alert-card-ai-row.resolved {
+  color: var(--success);
+}
+
+[data-theme='dark'] .alert-card-ai-row.in-progress {
+  color: #a5baff;
+}
+
+[data-theme='dark'] .alert-card-ai-row.resolved {
+  color: #92ec4b;
+}
+
+.alert-card-ai-row .ai-icon {
+  flex-shrink: 0;
+  color: inherit;
+  opacity: 0.9;
+}
+
+/* 5. List View AI / RCA Inline Text */
+.alert-ai-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  margin-right: 12px;
+}
+
+.alert-ai-inline.in-progress {
+  color: var(--brand);
+}
+
+.alert-ai-inline.resolved {
+  color: var(--success);
+}
+
+[data-theme='dark'] .alert-ai-inline.in-progress {
+  color: #a5baff;
+}
+
+[data-theme='dark'] .alert-ai-inline.resolved {
+  color: #92ec4b;
+}
+
+.alert-ai-inline .ai-icon {
+  flex-shrink: 0;
+  color: inherit;
+  opacity: 0.9;
+}
+
 

@@ -1,8 +1,9 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { useEnv } from '../state/env'
 import { findCluster, getClusters } from '../mock/infra'
 import type { Pod } from '../mock/infra'
 import { TimeAgo } from '../components/TimeAgo'
+import { useEnvLoad, ListSkeleton } from '../components/PageLoad'
 
 const POD_STATUS: Record<Pod['status'], { label: string; cls: string }> = {
   running: { label: 'Running', cls: 'sev-healthy' },
@@ -15,7 +16,21 @@ const POD_STATUS: Record<Pod['status'], { label: string; cls: string }> = {
 export function ClusterPage() {
   const { clusterId } = useParams()
   const { env } = useEnv()
+  const [searchParams] = useSearchParams()
+  const forcedState = searchParams.get('state')
+  const loading = useEnvLoad()
   const cluster = findCluster(clusterId ?? '')
+
+  if (loading) return <ListSkeleton rows={6} />
+
+  if (forcedState === 'error') {
+    return (
+      <div className="error-panel" role="alert">
+        <div className="error-title">Cluster data unavailable</div>
+        <div className="error-sub">Unable to reach the cluster API. It may be temporarily offline.</div>
+      </div>
+    )
+  }
 
   if (!cluster) {
     return (

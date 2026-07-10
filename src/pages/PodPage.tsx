@@ -1,15 +1,30 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { AlertTriangle, Info, OctagonX, RotateCcw } from 'lucide-react'
 import { findCluster, findPod } from '../mock/infra'
 import { TimeAgo } from '../components/TimeAgo'
+import { useEnvLoad, ListSkeleton } from '../components/PageLoad'
 
 /* Tertiary tier of the env › cluster › pod drill (DEV-8) — the deepest
    level. Anything deeper (container logs etc.) hands off to Telemetry
    rather than adding a 4th tier. */
 export function PodPage() {
   const { clusterId, podId } = useParams()
+  const [searchParams] = useSearchParams()
+  const forcedState = searchParams.get('state')
+  const loading = useEnvLoad()
   const cluster = findCluster(clusterId ?? '')
   const pod = findPod(clusterId ?? '', podId ?? '')
+
+  if (loading) return <ListSkeleton rows={4} />
+
+  if (forcedState === 'error') {
+    return (
+      <div className="error-panel" role="alert">
+        <div className="error-title">Pod data unavailable</div>
+        <div className="error-sub">The pod may have been evicted or the cluster API is unreachable.</div>
+      </div>
+    )
+  }
 
   if (!cluster || !pod) {
     return (

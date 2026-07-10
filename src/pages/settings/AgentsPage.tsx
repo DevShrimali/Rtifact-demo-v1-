@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { CheckCircle2, Plug, PlugZap, X } from 'lucide-react'
 import { agents } from '../../mock/settings'
 import type { Agent } from '../../mock/settings'
@@ -11,6 +12,8 @@ const CATEGORIES = ['Runtime Intelligence', 'Infrastructure Intelligence'] as co
    The drawer follows the Ask AI pattern: docked side panel, no backdrop,
    no focus trap — the page stays interactive, so the no-modal rule holds. */
 export function AgentsPage() {
+  const [searchParams] = useSearchParams()
+  const forcedState = searchParams.get('state')
   const [selected, setSelected] = useState<Agent | null>(null)
   const loading = useEnvLoad()
 
@@ -27,6 +30,24 @@ export function AgentsPage() {
   const avgCoverage = Math.round(agents.reduce((s, a) => s + a.coveragePct, 0) / agents.length)
   const avgConfidence = Math.round(agents.reduce((s, a) => s + a.confidencePct, 0) / agents.length)
   const missing = agents.reduce((s, a) => s + a.missingSources, 0)
+
+  if (forcedState === 'error') {
+    return (
+      <div className="error-panel" role="alert">
+        <div className="error-title">Agent data unavailable</div>
+        <div className="error-sub">Unable to fetch agent status. The backend may be temporarily offline.</div>
+      </div>
+    )
+  }
+
+  if (forcedState === 'empty') {
+    return (
+      <div className="placeholder-panel">
+        No agents configured yet.
+        <span className="mono">deploy an Rtifact agent to start intelligence coverage</span>
+      </div>
+    )
+  }
 
   return (
     <>

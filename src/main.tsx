@@ -17,6 +17,7 @@ import { WorkflowBuilderPage } from './pages/automate/WorkflowBuilderPage'
 import { PlaybooksPage, RunbookDetailPage } from './pages/automate/PlaybooksPage'
 import { SilencesPage } from './pages/automate/SilencesPage'
 import { AuditLogPage, ExecutionsPage, TemplatesPage } from './pages/automate/AutomateExtrasPages'
+import { AutomateLayout } from './pages/automate/AutomateLayout'
 import { ReviewLayout } from './pages/review/ReviewLayout'
 import { SummaryPage } from './pages/review/SummaryPage'
 import { MetricsReportPage } from './pages/review/MetricsReportPage'
@@ -173,6 +174,7 @@ const router = createBrowserRouter([
       {
         path: 'automate',
         handle: { crumb: () => 'Automate' },
+        element: <AutomateLayout />,
         children: [
           { index: true, element: <WorkflowListPage /> },
           {
