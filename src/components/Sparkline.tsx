@@ -24,7 +24,7 @@ export function Sparkline({
     })
     .join(' ')
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden>
       <polyline
         points={pts}
         fill="none"
