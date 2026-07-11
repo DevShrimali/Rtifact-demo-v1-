@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   CalendarClock, ChevronDown, Clock, Download, FileText,
-  Library, Sparkles, ArrowDownToLine, FileArchive, Check, HelpCircle
+  Library, Sparkles, ArrowDownToLine, FileArchive
 } from 'lucide-react'
 import { useEnv } from '../../state/env'
 import {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { ChevronRight, Layers, Sparkles, TrendingUp, Clock, ShieldAlert, DollarSign, ArrowUpRight, Check } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { ChevronRight, Layers, Sparkles, TrendingUp, Clock, ShieldAlert, DollarSign, Check } from 'lucide-react'
 import { useEnv } from '../../state/env'
 import {
   aggregateRollup,
@@ -267,7 +267,7 @@ export function SummaryPage() {
                 $138k<span style={{ fontSize: 18, color: 'var(--faint)' }}>/yr</span>
               </div>
             </div>
-            <div style={{ textAlignment: 'right' }}>
+            <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>This month</div>
               <div className="mono" style={{ fontSize: 24, fontWeight: 600, color: 'var(--success)' }}>$11.6k</div>
             </div>
@@ -332,7 +332,7 @@ export function SummaryPage() {
       {tab === 'time' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="panel" style={{ padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyAlignment: 'space-between', marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
               <span className="eyebrow" style={{ color: 'var(--muted)' }}>MTTR trend — lifetime to date</span>
               <span className="mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)' }}>-54% MTTR</span>
             </div>
@@ -398,7 +398,7 @@ export function SummaryPage() {
       {tab === 'risk' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="panel" style={{ padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyAlignment: 'space-between', marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
               <span className="eyebrow" style={{ color: 'var(--muted)' }}>Posture trend — lifetime to date</span>
               <span className="mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--warn-text)' }}>82% readiness</span>
             </div>

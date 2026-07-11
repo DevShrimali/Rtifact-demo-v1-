@@ -1,7 +1,19 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { executions } from '../../mock/automateExtras'
 
-const GROUPS = [
+interface GroupItem {
+  to: string
+  label: string
+  end?: boolean
+  badge?: boolean
+}
+
+interface Group {
+  label: string
+  items: GroupItem[]
+}
+
+const GROUPS: Group[] = [
   {
     label: 'Configure',
     items: [

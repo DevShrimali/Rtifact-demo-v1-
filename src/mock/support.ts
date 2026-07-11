@@ -3,7 +3,7 @@ import type { Severity } from './alerts'
 
 /* ---------- Screens 32–33: Cases ---------- */
 
-export type CaseStatus = 'Triage' | 'Investigating' | 'Fixing'
+export type CaseStatus = 'Triage' | 'Investigating' | 'Fixing' | 'Resolved'
 
 export interface SupportCase {
   id: string

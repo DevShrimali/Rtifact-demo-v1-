@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Bell, ChevronDown, Play, Plus, Save, Sparkles } from 'lucide-react'
+import { Bell, ChevronDown, Play, Sparkles } from 'lucide-react'
 import {
   dashboards,
   exploreSample,
   METRIC_CATEGORIES,
-  namedDashboards,
   PROMQL_SUGGESTIONS,
 } from '../../mock/telemetry'
 import type { MetricCategory } from '../../mock/telemetry'
@@ -24,21 +23,8 @@ export function MetricsPage() {
   const forcedState = searchParams.get('state')
   const [mode, setMode] = useState<'dashboards' | 'explore'>('dashboards')
   const [category, setCategory] = useState<MetricCategory>('Kubernetes')
-  const [dash, setDash] = useState(namedDashboards[0])
-  const [dashOpen, setDashOpen] = useState(false)
   const envLoading = useEnvLoad()
   const loading = envLoading || forcedState === 'loading'
-  const dashRef = useRef<HTMLDivElement>(null)
-
-
-
-  useEffect(() => {
-    const onDown = (e: PointerEvent) => {
-      if (!dashRef.current?.contains(e.target as Node)) setDashOpen(false)
-    }
-    document.addEventListener('pointerdown', onDown)
-    return () => document.removeEventListener('pointerdown', onDown)
-  }, [])
 
   const charts = dashboards[category]
 
