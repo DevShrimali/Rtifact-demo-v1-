@@ -5849,4 +5849,141 @@ select.text-input {
   opacity: 0.9;
 }
 
+/* ── Telemetry Metrics & Derived Sections ── */
+.scope-pill {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: 5px;
+  padding: 3px 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.scope-pill:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.scope-pill.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.telemetry-ai-box {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--sev-warn-bg2);
+  border: 1px solid var(--sev-warn-border);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--sev-warn-text);
+}
+
+.telemetry-ai-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--sev-warn);
+  flex: none;
+}
+
+.chart-sparkline-wrap svg {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.derived-metrics-section {
+  margin-top: 24px;
+}
+
+.derived-metrics-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.derived-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1024px) {
+  .derived-metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .derived-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.derived-metric-card {
+  background: var(--surface-panel);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.derived-metric-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 11px;
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  line-height: 1.2;
+}
+
+.derived-metric-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  flex: none;
+}
+
+.derived-metric-dot.danger {
+  background: var(--error);
+}
+
+.derived-metric-dot.warn {
+  background: var(--warn);
+}
+
+.derived-metric-dot.success {
+  background: var(--success);
+}
+
+.derived-metric-value {
+  font-size: 24px;
+  font-weight: 300;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.derived-metric-desc {
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.35;
+}
+
 

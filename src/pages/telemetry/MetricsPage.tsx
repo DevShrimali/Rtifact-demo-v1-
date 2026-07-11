@@ -165,7 +165,7 @@ export function MetricsPage() {
           </div>
 
           {loading ? (
-            <div className="charts-grid-two-col">
+            <div className="charts-grid">
               {[0, 1, 2, 3].map((i) => (
                 <div key={i} className="panel chart-card" aria-busy="true">
                   <span className="skeleton skeleton-text" style={{ width: '50%' }} />
@@ -183,7 +183,7 @@ export function MetricsPage() {
             </div>
           ) : (
             <>
-              <div className="charts-grid-two-col">
+              <div className="charts-grid">
                 {charts.map((chart) => {
                   const { service, metric } = formatChartTitle(chart.title)
                   return (
