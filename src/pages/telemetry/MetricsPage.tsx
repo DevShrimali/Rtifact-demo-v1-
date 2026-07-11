@@ -155,7 +155,7 @@ export function MetricsPage() {
               {[0, 1, 2, 3].map((i) => (
                 <div key={i} className="panel chart-card" aria-busy="true">
                   <span className="skeleton skeleton-text" style={{ width: '50%' }} />
-                  <span className="skeleton" style={{ width: '100%', height: 80, display: 'block', marginTop: 10 }} />
+                  <span className="skeleton" style={{ width: '100%', height: 48, display: 'block', marginTop: 10 }} />
                 </div>
               ))}
             </div>
@@ -173,9 +173,9 @@ export function MetricsPage() {
                 {charts.map((chart) => {
                   const { service, metric } = formatChartTitle(chart.title)
                   return (
-                    <div key={chart.id} className="panel chart-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 180 }}>
+                    <div key={chart.id} className="panel chart-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 120 }}>
                       <div>
-                        <div className="chart-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+                        <div className="chart-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--fg)' }}>{service}</span>
                             <span style={{ fontSize: 13, color: 'var(--muted)' }}>·</span>
@@ -183,8 +183,8 @@ export function MetricsPage() {
                           </div>
                           <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--fg)', fontFamily: 'var(--font-mono)' }}>{chart.current}</span>
                         </div>
-                        <div className="chart-sparkline-wrap" style={{ position: 'relative', overflow: 'hidden', padding: '8px 0' }}>
-                          <Sparkline data={chart.series} width={520} height={80} stroke={chart.anomaly ? 'var(--warn)' : 'var(--muted)'} />
+                        <div className="chart-sparkline-wrap" style={{ position: 'relative', overflow: 'hidden', padding: '4px 0', height: 48 }}>
+                          <Sparkline data={chart.series} width={520} height={48} stroke={chart.anomaly ? 'var(--warn)' : 'var(--muted)'} />
                         </div>
                       </div>
                       
@@ -194,7 +194,7 @@ export function MetricsPage() {
                           <span>AI: {chart.anomaly.text}</span>
                         </div>
                       ) : (
-                        <div className="telemetry-card-footer-text" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 8 }}>
+                        <div className="telemetry-card-footer-text" style={{ fontSize: 11, color: 'var(--faint)', marginTop: 4 }}>
                           {getFooterText(chart.id)}
                         </div>
                       )}
