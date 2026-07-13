@@ -27,7 +27,7 @@ export function ScreenStateWidget() {
 
   /* ── minimised state — persisted ── */
   const [minimised, setMinimised] = useState(() =>
-    localStorage.getItem('rtifact.screenstate.min') === '1'
+    localStorage.getItem('rtifact.screenstate.min') !== '0'
   )
 
   const toggleMinimise = () => {

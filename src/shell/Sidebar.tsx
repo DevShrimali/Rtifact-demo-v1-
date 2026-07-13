@@ -42,7 +42,7 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
         return JSON.parse(stored)
       } catch (e) {}
     }
-    return { Command: true, Review: true }
+    return { Command: true, Review: true, Support: true }
   })
 
   const toggleGroup = (groupLabel: string) => {
@@ -86,6 +86,10 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
       label: 'Support',
       Icon: LifeBuoy,
       to: '/support',
+      subItems: [
+        { to: '/support', label: 'Cases', end: true, badge: 5, badgeType: 'gray' },
+        { to: '/support/status-pages', label: 'Status Pages' },
+      ],
     },
   ]
 

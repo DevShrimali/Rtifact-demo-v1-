@@ -1,22 +1,9 @@
-import { Link, NavLink, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { cases } from '../../mock/support'
 import { SeverityBadge } from '../../components/SeverityBadge'
 import { TimeAgo } from '../../components/TimeAgo'
 import { ListSkeleton, useEnvLoad } from '../../components/PageLoad'
-
-export function SupportSubnav() {
-  return (
-    <nav className="subnav" aria-label="Support sections">
-      <NavLink to="/support" end className={({ isActive }) => `subnav-item${isActive ? ' active' : ''}`}>
-        Cases
-      </NavLink>
-      <NavLink to="/support/status-pages" className={({ isActive }) => `subnav-item${isActive ? ' active' : ''}`}>
-        Status Pages
-      </NavLink>
-    </nav>
-  )
-}
 
 /* Screen 32 — Cases queue: status, severity, assignee, age. */
 export function CasesPage() {
@@ -42,8 +29,6 @@ export function CasesPage() {
           Open case
         </button>
       </div>
-
-      <SupportSubnav />
 
       {loading ? (
         <ListSkeleton rows={5} />
